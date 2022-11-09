@@ -7,6 +7,7 @@ import urllib.parse as up
 from typing import List, Set
 
 import boto3
+import PIL.Image
 import tqdm
 
 
@@ -77,12 +78,20 @@ def download_file(obj: ObjRecord, client, basepath: str, class_map: dict) -> Non
     parsed_url = up.urlparse(obj.s3_url)
     bucket = parsed_url.netloc
     path = parsed_url.path[1:]
-    client.download_file(bucket, path, os.path.join(basepath, 'images', hl + '.' + os.path.splitext(path)[1]))
+    local_path = os.path.join(basepath, 'images', hl + os.path.splitext(path)[1])
+    client.download_file(bucket, path, local_path)
+
+    with PIL.Image.open(local_path) as im:
+        width, height = im.size
 
     with open(os.path.join(basepath, 'labels', hl + '.txt'), 'w') as f:
         for a in obj.annotations:
             cls = class_map[a.cls]
-            f.write(f'{cls} {a.left} {a.top} {a.width} {a.height}\n')
+
+            x_center = (a.width - a.left) / 2
+            y_center = (a.height - a.top) / 2
+
+            f.write(f'{cls} {x_center / width} {y_center / height} {a.width / width} {a.height / height}\n')
 
 
 def download_data(ds: Dataset):
