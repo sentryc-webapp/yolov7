@@ -1,0 +1,19 @@
+# Kaweco mini-dataset
+
+
+# train and val data as 1) directory: path/images/, 2) file: path/images.txt, or 3) list: [path1/images/, path2/images/]
+train: ./kaweco/train
+val: ./kaweco/val
+test: ./kaweco/val
+
+# number of classes
+nc: 7
+
+# class names
+names: ['liliput_closed',
+        'liliput_opened',
+        'logo_1',
+        'logo_2',
+        'ballpen',
+        'ballpen_2',
+        'sport']
