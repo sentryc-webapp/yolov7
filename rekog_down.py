@@ -23,6 +23,9 @@ class BBox:
 @dataclasses.dataclass
 class ObjRecord:
     s3_url: str
+    width: int
+    height: int
+    depth: int
     annotations: List[BBox]
 
 
@@ -52,6 +55,7 @@ def retrieve_dataset(client, dataset: dict) -> Dataset:
 
     results = []
     classes = set()
+    print(rows[0])
     for r in rows:
         for k in r:
             if not k.endswith('_BB'):
@@ -66,6 +70,7 @@ def retrieve_dataset(client, dataset: dict) -> Dataset:
             results.append(ObjRecord(
                 s3_url=r['source-ref'],
                 annotations=annotations,
+                **(r[k]['image_size'][0])
             ))
 
     ds = Dataset(dtype=dtype, records=results, classes=classes)
@@ -81,15 +86,15 @@ def download_file(obj: ObjRecord, client, basepath: str, class_map: dict) -> Non
     local_path = os.path.join(basepath, 'images', hl + os.path.splitext(path)[1])
     client.download_file(bucket, path, local_path)
 
-    with PIL.Image.open(local_path) as im:
-        width, height = im.size
+    width = obj.width
+    height = obj.height
 
     with open(os.path.join(basepath, 'labels', hl + '.txt'), 'w') as f:
         for a in obj.annotations:
             cls = class_map[a.cls]
 
-            x_center = (a.width - a.left) / 2
-            y_center = (a.height - a.top) / 2
+            x_center = a.left + (a.width / 2)
+            y_center = a.top + (a.height / 2)
 
             f.write(f'{cls} {x_center / width} {y_center / height} {a.width / width} {a.height / height}\n')
 
