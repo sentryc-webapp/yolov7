@@ -4,7 +4,7 @@ import json
 import os
 import urllib.parse as up
 
-from typing import List, Set
+from typing import List, Optional, Set
 
 import boto3
 import PIL.Image
@@ -26,7 +26,7 @@ class ObjRecord:
     width: int
     height: int
     depth: int
-    annotations: List[BBox]
+    annotations: Optional[List[BBox]] = None
 
 
 @dataclasses.dataclass
@@ -55,23 +55,33 @@ def retrieve_dataset(client, dataset: dict) -> Dataset:
 
     results = []
     classes = set()
-    print(rows[0])
+
     for r in rows:
+        annotations = []
         for k in r:
             if not k.endswith('_BB'):
                 continue
             class_map = r[k + '-metadata']['class-map']
             classes.update(class_map.values())
             # annotations = [{**a, 'cls': class_map[str(a['class_id'])]} for a in r[k]['annotations']]
-            annotations = []
+
+            size = r[k]['image_size'][0]
+
             for a in r[k]['annotations']:
                 cls = class_map[str(a.pop('class_id'))]
                 annotations.append(BBox(**a, cls=cls))
-            results.append(ObjRecord(
-                s3_url=r['source-ref'],
-                annotations=annotations,
-                **(r[k]['image_size'][0])
-            ))
+
+            break
+        else:
+            # we add NOT_RELEVANT as images without annotation, skip the rest
+            if r.get('auto-label-metadata', {}).get('class-name') != 'NOT_RELEVANT':
+                continue
+            size = {'width': 0, 'height': 0, 'depth': 0}
+
+        results.append(ObjRecord(
+            s3_url=r['source-ref'],
+            annotations=annotations,
+            **size))
 
     ds = Dataset(dtype=dtype, records=results, classes=classes)
     return ds
@@ -85,6 +95,9 @@ def download_file(obj: ObjRecord, client, basepath: str, class_map: dict) -> Non
     path = parsed_url.path[1:]
     local_path = os.path.join(basepath, 'images', hl + os.path.splitext(path)[1])
     client.download_file(bucket, path, local_path)
+
+    if not obj.annotations:
+        return
 
     width = obj.width
     height = obj.height
