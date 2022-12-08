@@ -1,0 +1,13 @@
+# ridge mini-dataset
+
+
+# train and val data as 1) directory: path/images/, 2) file: path/images.txt, or 3) list: [path1/images/, path2/images/]
+train: ./ridge-dataset-300/train
+val: ./ridge-dataset-300/val
+test: ./ridge-dataset-300/test
+
+# number of classes
+nc: 1
+
+# class names
+names: ['wallet']

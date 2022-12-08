@@ -1,0 +1,13 @@
+# Kaweco mini-dataset
+
+
+# train and val data as 1) directory: path/images/, 2) file: path/images.txt, or 3) list: [path1/images/, path2/images/]
+train: ./kaweco_augmented/train
+val: ./kaweco_augmented/val
+test: ./kaweco_augmented/val
+
+# number of classes
+nc: 3
+
+# class names
+names: ['KAWECO_LILIPUT', 'Kaweco_pen', 'UNRELATED_PEN']

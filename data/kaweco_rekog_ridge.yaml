@@ -1,0 +1,13 @@
+# Kaweco mini-dataset
+
+
+# train and val data as 1) directory: path/images/, 2) file: path/images.txt, or 3) list: [path1/images/, path2/images/]
+train: ./kaweco_rekog_ridge/train
+val: ./kaweco_rekog_ridge/val
+test: ./kaweco_rekog_ridge/test
+
+# number of classes
+nc: 3
+
+# class names
+names: ['KAWECO_LILIPUT', 'Kaweco_sport', 'Ridge_wallet']
